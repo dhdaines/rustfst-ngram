@@ -11,29 +11,35 @@ use std::io::BufReader;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+/// rustfst does not define this but we will
+type StdVectorFst = VectorFst<TropicalWeight>;
+/// rustfst does not define this but we will
+type StdTr = Tr<TropicalWeight>;
+/// Type for counts
+type Count = LogWeight;
 /// ID for an arc being counted
 type TrId = StateId;
 /// There is no arc here (FIXME: Option would be safer...)
 pub static NO_TR_ID: TrId = NO_STATE_ID;
-
+/// Keep track of transitions out of a given state
 type PairTrMap = HashMap<(Label, StateId), TrId>;
 
 /// Metadata for states
 #[derive(Debug)]
-pub struct CountState<W: Semiring> {
+pub struct CountState {
     /// ID of the backoff state for the current state.
     backoff_state: StateId,
     /// N-gram order of the state (of the outgoing arcs).
     order: u8,
     /// Count for n-gram corresponding to superfinal arc.
-    final_count: W,
+    final_count: Count,
     /// ID of the first outgoing arc at that state.
     first_tr: TrId,
 }
 
 /// Metadata for transitions
 #[derive(Debug)]
-pub struct CountTr<W: Semiring> {
+pub struct CountTr {
     /// ID of the origin state for this arc.
     origin: StateId,
     /// ID of the destination state for this arc.
@@ -41,20 +47,20 @@ pub struct CountTr<W: Semiring> {
     /// Label.
     label: Label,
     /// Count of the n-gram corresponding to this arc.
-    count: W,
+    count: Count,
     /// ID of backoff arc.
     backoff_tr: TrId,
 }
 
 /// N-Gram counter
 #[derive(Debug)]
-pub struct NGramCounter<W: Semiring> {
+pub struct NGramCounter {
     /// Maximum order of N-Grams to count
     pub order: u8,
     /// CountStates for each state
-    states: Vec<CountState<W>>,
+    states: Vec<CountState>,
     /// CountTrs for each transition
-    trs: Vec<CountTr<W>>,
+    trs: Vec<CountTr>,
     /// ID of start state
     initial: StateId,
     /// ID of unigram/backoff state
@@ -63,15 +69,15 @@ pub struct NGramCounter<W: Semiring> {
     pair_tr_maps: Vec<PairTrMap>,
 }
 
-impl<W: Semiring> NGramCounter<W> {
+impl NGramCounter {
     pub fn new(order: u8) -> Self {
         let mut states = Vec::<_>::new();
-        // This is, obviously, zero.
         let backoff = states.len() as StateId;
+        assert_eq!(backoff, 0); // Why would it be anything else?
         states.push(CountState {
             backoff_state: NO_STATE_ID,
             order: 1,
-            final_count: W::zero(),
+            final_count: Count::zero(),
             first_tr: NO_TR_ID,
         });
         let initial = if order == 1 {
@@ -81,7 +87,7 @@ impl<W: Semiring> NGramCounter<W> {
             states.push(CountState {
                 backoff_state: backoff,
                 order: 2,
-                final_count: W::zero(),
+                final_count: Count::zero(),
                 first_tr: NO_TR_ID,
             });
             unigram
@@ -98,34 +104,8 @@ impl<W: Semiring> NGramCounter<W> {
         }
     }
 
-    pub fn get_fst(&self) -> Result<VectorFst<W>> {
-        let mut fst = VectorFst::<W>::new();
-        for (s, state) in self.states.iter().enumerate() {
-            let s: StateId = s.try_into().unwrap();
-            fst.add_state();
-            // FIXME: Really unsure about this .clone()
-            fst.set_final(s, state.final_count.clone())?;
-            if state.backoff_state != NO_STATE_ID {
-                fst.add_tr(
-                    s,
-                    Tr::<W>::new(EPS_LABEL, EPS_LABEL, W::zero(), state.backoff_state),
-                )?;
-            }
-        }
-        for tr in self.trs.iter() {
-            fst.add_tr(
-                tr.origin,
-                // FIXME: Really unsure about this .clone()
-                Tr::<W>::new(tr.label, tr.label, tr.count.clone(), tr.destination),
-            )?;
-        }
-        fst.set_start(self.initial)?;
-        self.state_counts(&mut fst)?;
-        Ok(fst)
-    }
-
     /// Sum the counts of non-backoff (i.e. non-epsilon) arcs onto the backoff arc
-    fn state_counts(&self, fst: &mut VectorFst<W>) -> Result<()> {
+    fn state_counts(&self, fst: &mut StdVectorFst) -> Result<()> {
         for (s, state) in self.states.iter().enumerate() {
             let s: StateId = s.try_into().unwrap();
             let mut state_count = state.final_count.clone();
@@ -134,14 +114,14 @@ impl<W: Semiring> NGramCounter<W> {
                 let mut trs = fst.tr_iter_mut(s)?;
                 for idx in 0..trs.len() {
                     if trs[idx].ilabel != EPS_LABEL {
-                        state_count.plus_assign(&trs[idx].weight)?;
+                        state_count.plus_assign(Count::from(*trs[idx].weight.value()))?;
                     } else {
                         bo_pos = Some(idx);
                     }
                 }
                 match bo_pos {
                     None => return Err(anyhow!("backoff arc not found")),
-                    Some(idx) => trs.set_weight(idx, state_count)?,
+                    Some(idx) => trs.set_weight(idx, TropicalWeight::from(*state_count.value()))?,
                 }
             }
         }
@@ -170,7 +150,7 @@ impl<W: Semiring> NGramCounter<W> {
             origin: state_id,
             destination: self.initial,
             label: label,
-            count: W::zero(),
+            count: Count::zero(),
             backoff_tr: NO_TR_ID,
         });
         if self.order == 1 {
@@ -194,7 +174,7 @@ impl<W: Semiring> NGramCounter<W> {
                     self.trs[backoff_tr as usize].destination
                 },
                 order: order + 1,
-                final_count: W::zero(),
+                final_count: Count::zero(),
                 first_tr: NO_TR_ID,
             });
             nextstate
@@ -219,7 +199,7 @@ impl<W: Semiring> NGramCounter<W> {
         self.add_tr(state_id, label)
     }
 
-    fn update_count(&mut self, state_id: StateId, label: Label, count: &W) -> Result<StateId> {
+    fn update_count(&mut self, state_id: StateId, label: Label, count: &Count) -> Result<StateId> {
         let mut tr_id = self.find_tr(state_id, label);
         let nextstate_id = self.trs[tr_id as usize].destination;
         while tr_id != NO_TR_ID {
@@ -229,7 +209,7 @@ impl<W: Semiring> NGramCounter<W> {
         Ok(nextstate_id)
     }
 
-    fn update_final_count(&mut self, mut state_id: StateId, count: &W) -> Result<()> {
+    fn update_final_count(&mut self, mut state_id: StateId, count: &Count) -> Result<()> {
         while state_id != NO_STATE_ID {
             self.states[state_id as usize]
                 .final_count
@@ -239,13 +219,42 @@ impl<W: Semiring> NGramCounter<W> {
         Ok(())
     }
 
-    pub fn count_from_string_fst(&mut self, fst: &VectorFst<W>) -> Result<()> {
+    fn get_fst(&self) -> Result<StdVectorFst> {
+        let mut fst = StdVectorFst::new();
+        for (s, state) in self.states.iter().enumerate() {
+            let s: StateId = s.try_into().unwrap();
+            fst.add_state();
+            fst.set_final(s, *state.final_count.value())?;
+            if state.backoff_state != NO_STATE_ID {
+                fst.add_tr(
+                    s,
+                    StdTr::new(
+                        EPS_LABEL,
+                        EPS_LABEL,
+                        TropicalWeight::zero(),
+                        state.backoff_state,
+                    ),
+                )?;
+            }
+        }
+        for tr in self.trs.iter() {
+            fst.add_tr(
+                tr.origin,
+                StdTr::new(tr.label, tr.label, *tr.count.value(), tr.destination),
+            )?;
+        }
+        fst.set_start(self.initial)?;
+        self.state_counts(&mut fst)?;
+        Ok(fst)
+    }
+
+    pub fn count_from_string_fst<W: Semiring>(&mut self, fst: &VectorFst<W>) -> Result<()> {
         let mut count_state = self.initial;
         // FIXME: Should assert that it's actually a string FST
         let mut fst_state = fst
             .start()
             .ok_or_else(|| anyhow!("FST has no start state"))?;
-        let weight = W::one();
+        let weight = Count::one();
         while !fst.is_final(fst_state)? {
             // !LOL?
             let trs = fst.get_trs(fst_state)?;
@@ -262,27 +271,30 @@ impl<W: Semiring> NGramCounter<W> {
         Ok(())
     }
 
-    pub fn get_ngram_counts(
+    pub fn get_ngram_counts<W: Semiring>(
         &mut self,
         sequences: Vec<VectorFst<W>>,
         syms: SymbolTable,
-    ) -> Result<VectorFst<W>> {
+    ) -> Result<StdVectorFst> {
         for fst in sequences {
             self.count_from_string_fst(&fst)?;
         }
         let mut fst = self.get_fst()?;
-        let syms = Arc::new(syms);
-        fst.set_input_symbols(Arc::clone(&syms));
-        fst.set_output_symbols(Arc::clone(&syms));
+        tr_sort(&mut fst, ILabelCompare {});
+        if syms.len() > 0 {
+            let syms = Arc::new(syms);
+            fst.set_input_symbols(Arc::clone(&syms));
+            fst.set_output_symbols(Arc::clone(&syms));
+        }
         Ok(fst)
     }
 }
 
 /// Read input sequences as whitespace-separated lines
-pub fn read_sequences<W: Semiring>(input: &PathBuf) -> Result<(Vec<VectorFst<W>>, SymbolTable)> {
+pub fn read_sequences(input: &PathBuf) -> Result<(Vec<StdVectorFst>, SymbolTable)> {
     let fh = File::open(input)?;
     let mut syms = SymbolTable::new();
-    let data: Vec<VectorFst<W>> = BufReader::new(fh)
+    let data: Vec<StdVectorFst> = BufReader::new(fh)
         .lines()
         .flat_map(identity) // let IntoIter remove None for us
         .map(|spam| {
@@ -292,7 +304,7 @@ pub fn read_sequences<W: Semiring>(input: &PathBuf) -> Result<(Vec<VectorFst<W>>
                 .map(|s| syms.add_symbol(s))
                 .collect();
             // FIXME: We should assert that this is a string FST
-            acceptor(&labels, W::one())
+            acceptor(&labels, TropicalWeight::one())
         })
         .collect();
     Ok((data, syms))
@@ -301,13 +313,11 @@ pub fn read_sequences<W: Semiring>(input: &PathBuf) -> Result<(Vec<VectorFst<W>>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rustfst::semirings::LogWeight;
     use rustfst::utils::decode_linear_fst;
 
     #[test]
     fn it_reads_sequences() {
-        let (data, syms) =
-            read_sequences::<LogWeight>(&PathBuf::from("testdata/austen.txt")).unwrap();
+        let (data, syms) = read_sequences(&PathBuf::from("testdata/austen.txt")).unwrap();
         assert_eq!(data.len(), 5);
         assert!(syms.contains_symbol("and"));
         assert!(syms.contains_symbol("dashwood"));
@@ -325,17 +335,15 @@ mod tests {
 
     #[test]
     fn it_counts_ngrams() {
-        let (data, _syms) =
-            read_sequences::<LogWeight>(&PathBuf::from("testdata/austen.txt")).unwrap();
-        let mut ngram = NGramCounter::<LogWeight>::new(3);
+        let (data, _syms) = read_sequences(&PathBuf::from("testdata/austen.txt")).unwrap();
+        let mut ngram = NGramCounter::new(3);
         ngram.count_from_string_fst(&data[0]).unwrap();
     }
 
     #[test]
     fn it_makes_an_fst() {
-        let (data, syms) =
-            read_sequences::<LogWeight>(&PathBuf::from("testdata/austen.txt")).unwrap();
-        let mut ngram = NGramCounter::<LogWeight>::new(3);
+        let (data, syms) = read_sequences(&PathBuf::from("testdata/austen.txt")).unwrap();
+        let mut ngram = NGramCounter::new(3);
         let fst = ngram.get_ngram_counts(data, syms).unwrap();
         fst.write(PathBuf::from("austen.fst")).unwrap();
     }
