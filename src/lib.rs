@@ -224,7 +224,10 @@ impl NGramCounter {
         for (s, state) in self.states.iter().enumerate() {
             let s: StateId = s.try_into().unwrap();
             fst.add_state();
-            fst.set_final(s, *state.final_count.value())?;
+            // rustfst and openfst handle final states differently
+            if state.final_count != Count::zero() {
+                fst.set_final(s, *state.final_count.value())?;
+            }
             if state.backoff_state != NO_STATE_ID {
                 fst.add_tr(
                     s,
@@ -314,6 +317,7 @@ pub fn read_sequences(input: &PathBuf) -> Result<(Vec<StdVectorFst>, SymbolTable
 mod tests {
     use super::*;
     use rustfst::utils::decode_linear_fst;
+    use std::iter::zip;
 
     #[test]
     fn it_reads_sequences() {
@@ -345,6 +349,18 @@ mod tests {
         let (data, syms) = read_sequences(&PathBuf::from("testdata/austen.txt")).unwrap();
         let mut ngram = NGramCounter::new(3);
         let fst = ngram.get_ngram_counts(data, syms).unwrap();
-        fst.write(PathBuf::from("austen.fst")).unwrap();
+        //fst.write(&PathBuf::from("austen.fst")).unwrap();
+        let ref_fst = StdVectorFst::read(&PathBuf::from("testdata/austen.count.3.fst")).unwrap();
+        // Don't compare directly because it is impossible to read the resulting error message
+        assert_eq!(fst.start(), ref_fst.start());
+        let states: Vec<_> = fst.states_iter().collect();
+        let ref_states: Vec<_> = ref_fst.states_iter().collect();
+        assert_eq!(states, ref_states);
+        for (state, ref_state) in zip(fst.fst_iter(), ref_fst.fst_iter()) {
+            assert_eq!(state.state_id, ref_state.state_id);
+            assert_eq!(state.trs, ref_state.trs);
+            assert_eq!(state.num_trs, ref_state.num_trs);
+            assert_eq!(state.final_weight, ref_state.final_weight);
+        }
     }
 }
