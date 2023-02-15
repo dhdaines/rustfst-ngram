@@ -263,18 +263,23 @@ impl<W: Semiring> NGramCounter<W> {
     }
 
     pub fn get_ngram_counts(
-        &self,
+        &mut self,
         sequences: Vec<VectorFst<W>>,
         syms: SymbolTable,
     ) -> Result<VectorFst<W>> {
-        let fst = VectorFst::<W>::new();
-
+        for fst in sequences {
+            self.count_from_string_fst(&fst)?;
+        }
+        let mut fst = self.get_fst()?;
+        let syms = Arc::new(syms);
+        fst.set_input_symbols(Arc::clone(&syms));
+        fst.set_output_symbols(Arc::clone(&syms));
         Ok(fst)
     }
 }
 
 /// Read input sequences as whitespace-separated lines
-pub fn read_sequences<W: Semiring>(input: &PathBuf) -> Result<(SymbolTable, Vec<VectorFst<W>>)> {
+pub fn read_sequences<W: Semiring>(input: &PathBuf) -> Result<(Vec<VectorFst<W>>, SymbolTable)> {
     let fh = File::open(input)?;
     let mut syms = SymbolTable::new();
     let data: Vec<VectorFst<W>> = BufReader::new(fh)
@@ -290,19 +295,19 @@ pub fn read_sequences<W: Semiring>(input: &PathBuf) -> Result<(SymbolTable, Vec<
             acceptor(&labels, W::one())
         })
         .collect();
-    Ok((syms, data))
+    Ok((data, syms))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rustfst::semirings::TropicalWeight;
+    use rustfst::semirings::LogWeight;
     use rustfst::utils::decode_linear_fst;
 
     #[test]
     fn it_reads_sequences() {
-        let (syms, data) =
-            read_sequences::<TropicalWeight>(&PathBuf::from("testdata/austen.txt")).unwrap();
+        let (data, syms) =
+            read_sequences::<LogWeight>(&PathBuf::from("testdata/austen.txt")).unwrap();
         assert_eq!(data.len(), 5);
         assert!(syms.contains_symbol("and"));
         assert!(syms.contains_symbol("dashwood"));
@@ -320,22 +325,18 @@ mod tests {
 
     #[test]
     fn it_counts_ngrams() {
-        let (syms, data) =
-            read_sequences::<TropicalWeight>(&PathBuf::from("testdata/austen.txt")).unwrap();
-        let mut ngram = NGramCounter::<TropicalWeight>::new(3);
+        let (data, _syms) =
+            read_sequences::<LogWeight>(&PathBuf::from("testdata/austen.txt")).unwrap();
+        let mut ngram = NGramCounter::<LogWeight>::new(3);
         ngram.count_from_string_fst(&data[0]).unwrap();
     }
 
     #[test]
     fn it_makes_an_fst() {
-        let (syms, data) =
-            read_sequences::<TropicalWeight>(&PathBuf::from("testdata/austen.txt")).unwrap();
-        let mut ngram = NGramCounter::<TropicalWeight>::new(3);
-        ngram.count_from_string_fst(&data[0]).unwrap();
-        let mut fst = ngram.get_fst().unwrap();
-        let syms = Arc::new(syms);
-        fst.set_input_symbols(Arc::clone(&syms));
-        fst.set_output_symbols(Arc::clone(&syms));
+        let (data, syms) =
+            read_sequences::<LogWeight>(&PathBuf::from("testdata/austen.txt")).unwrap();
+        let mut ngram = NGramCounter::<LogWeight>::new(3);
+        let fst = ngram.get_ngram_counts(data, syms).unwrap();
         fst.write(PathBuf::from("austen.fst")).unwrap();
     }
 }
