@@ -1,0 +1,10 @@
+[package]
+name = "rustfst-ngram"
+version = "0.1.0"
+edition = "2021"
+description = "Train N-Gram models as FSTs"
+license = "BSD-2-Clause"
+
+[dependencies]
+anyhow = "1.0.68"
+rustfst = "0.13.1"
