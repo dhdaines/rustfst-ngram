@@ -67,7 +67,7 @@ impl<W: Semiring> NGramCounter<W> {
     pub fn new(order: u8) -> Self {
         let mut states = Vec::<_>::new();
         // This is, obviously, zero.
-        let backoff = states.len() as u32;
+        let backoff = states.len() as StateId;
         states.push(CountState {
             backoff_state: NO_STATE_ID,
             order: 1,
@@ -77,7 +77,7 @@ impl<W: Semiring> NGramCounter<W> {
         let initial = if order == 1 {
             backoff
         } else {
-            let unigram = states.len() as u32;
+            let unigram = states.len() as StateId;
             states.push(CountState {
                 backoff_state: backoff,
                 order: 2,
