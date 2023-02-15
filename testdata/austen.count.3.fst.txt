@@ -1,4 +1,4 @@
-1	0	<epsilon>	-1.60943794
+1	0	<eps>	-1.60943794
 1	3	and
 1	79	had
 1	46	he	-0.693147182
@@ -52,250 +52,250 @@
 0	108	even
 0	112	himself
 0	-1.60943794
-2	0	<epsilon>	-0.693147182
+2	0	<eps>	-0.693147182
 2	5	mister
 2	72	rather
-3	2	<epsilon>
+3	2	<eps>
 3	5	mister
-4	0	<epsilon>
+4	0	<eps>
 4	7	john
-5	4	<epsilon>
+5	4	<eps>
 5	7	john
-6	0	<epsilon>
+6	0	<eps>
 6	9	dashwood
-7	6	<epsilon>
+7	6	<eps>
 7	9	dashwood
-8	0	<epsilon>
+8	0	<eps>
 8	11	had
-9	8	<epsilon>
+9	8	<eps>
 9	11	had
-10	0	<epsilon>	-0.693147182
+10	0	<eps>	-0.693147182
 10	13	then
 10	80	he
-11	10	<epsilon>
+11	10	<eps>
 11	13	then
-12	0	<epsilon>
+12	0	<eps>
 12	15	leisure
-13	12	<epsilon>
+13	12	<eps>
 13	15	leisure
-14	0	<epsilon>
+14	0	<eps>
 14	17	to
-15	14	<epsilon>
+15	14	<eps>
 15	17	to
-16	0	<epsilon>	-1.38629436
+16	0	<eps>	-1.38629436
 16	19	consider
 16	64	be	-0.693147182
 16	40	do
-17	16	<epsilon>
+17	16	<eps>
 17	19	consider
-18	0	<epsilon>
+18	0	<eps>
 18	21	how
-19	18	<epsilon>
+19	18	<eps>
 19	21	how
-20	0	<epsilon>
+20	0	<eps>
 20	23	much
-21	20	<epsilon>
+21	20	<eps>
 21	23	much
-22	0	<epsilon>
+22	0	<eps>
 22	25	there
-23	22	<epsilon>
+23	22	<eps>
 23	25	there
-24	0	<epsilon>
+24	0	<eps>
 24	27	might
-25	24	<epsilon>
+25	24	<eps>
 25	27	might
-26	0	<epsilon>	-1.09861231
+26	0	<eps>	-1.09861231
 26	29	be
 26	95	have
 26	109	even
-27	26	<epsilon>
+27	26	<eps>
 27	29	be
-28	0	<epsilon>	-1.09861231
+28	0	<eps>	-1.09861231
 28	31	prudently
 28	78	ill
 28	66	rather
-29	28	<epsilon>
+29	28	<eps>
 29	31	prudently
-30	0	<epsilon>
+30	0	<eps>
 30	33	in
-31	30	<epsilon>
+31	30	<eps>
 31	33	in
-32	0	<epsilon>
+32	0	<eps>
 32	35	his
-33	32	<epsilon>
+33	32	<eps>
 33	35	his
-34	0	<epsilon>
+34	0	<eps>
 34	37	power
-35	34	<epsilon>
+35	34	<eps>
 35	37	power
-36	0	<epsilon>
+36	0	<eps>
 36	38	to
-37	36	<epsilon>
+37	36	<eps>
 37	38	to
-38	16	<epsilon>
+38	16	<eps>
 38	40	do
-39	0	<epsilon>
+39	0	<eps>
 39	42	for
-40	39	<epsilon>
+40	39	<eps>
 40	42	for
-41	0	<epsilon>
+41	0	<eps>
 41	44	them
-42	41	<epsilon>
+42	41	<eps>
 42	44	them
-43	0	<epsilon>
+43	0	<eps>
 43
-44	43	<epsilon>
+44	43	<eps>
 44
-45	0	<epsilon>	-1.60943794
+45	0	<eps>	-1.60943794
 45	93	might	-0.693147182
 45	48	was	-0.693147182
 45	82	married
-46	45	<epsilon>	-0.693147182
+46	45	<eps>	-0.693147182
 46	93	might
 46	48	was
-47	0	<epsilon>	-0.693147182
+47	0	<eps>	-0.693147182
 47	50	not
 47
-48	47	<epsilon>	-0.693147182
+48	47	<eps>	-0.693147182
 48	50	not
 48
-49	0	<epsilon>
+49	0	<eps>
 49	52	an
-50	49	<epsilon>
+50	49	<eps>
 50	52	an
-51	0	<epsilon>
+51	0	<eps>
 51	54	ill
-52	51	<epsilon>
+52	51	<eps>
 52	54	ill
-53	0	<epsilon>	-0.693147182
+53	0	<eps>	-0.693147182
 53	56	disposed	-0.693147182
-54	53	<epsilon>
+54	53	<eps>
 54	56	disposed
-55	0	<epsilon>	-0.693147182
+55	0	<eps>	-0.693147182
 55	58	young
 55
-56	55	<epsilon>	-0.693147182
+56	55	<eps>	-0.693147182
 56	58	young
 56
-57	0	<epsilon>
+57	0	<eps>
 57	60	man
-58	57	<epsilon>
+58	57	<eps>
 58	60	man
-59	0	<epsilon>
+59	0	<eps>
 59
-60	59	<epsilon>
+60	59	<eps>
 60
-61	0	<epsilon>
+61	0	<eps>
 61	63	to
-62	61	<epsilon>
+62	61	<eps>
 62	63	to
-63	16	<epsilon>
+63	16	<eps>
 63	64	be
-64	28	<epsilon>	-0.693147182
+64	28	<eps>	-0.693147182
 64	78	ill
 64	66	rather
-65	0	<epsilon>	-0.693147182
+65	0	<eps>	-0.693147182
 65	68	cold
 65	74	selfish
-66	65	<epsilon>
+66	65	<eps>
 66	68	cold
-67	0	<epsilon>
+67	0	<eps>
 67	70	hearted
-68	67	<epsilon>
+68	67	<eps>
 68	70	hearted
-69	0	<epsilon>
+69	0	<eps>
 69	71	and
-70	69	<epsilon>
+70	69	<eps>
 70	71	and
-71	2	<epsilon>
+71	2	<eps>
 71	72	rather
-72	65	<epsilon>
+72	65	<eps>
 72	74	selfish
-73	0	<epsilon>
+73	0	<eps>
 73	76	is
-74	73	<epsilon>
+74	73	<eps>
 74	76	is
-75	0	<epsilon>
+75	0	<eps>
 75	77	to
-76	75	<epsilon>
+76	75	<eps>
 76	77	to
-77	16	<epsilon>
+77	16	<eps>
 77	64	be
-78	53	<epsilon>
+78	53	<eps>
 78	56	disposed
-79	10	<epsilon>
+79	10	<eps>
 79	80	he
-80	45	<epsilon>
+80	45	<eps>
 80	82	married
-81	0	<epsilon>
+81	0	<eps>
 81	84	a
-82	81	<epsilon>
+82	81	<eps>
 82	84	a
-83	0	<epsilon>	-0.693147182
+83	0	<eps>	-0.693147182
 83	86	more
 83	89	amiable
-84	83	<epsilon>
+84	83	<eps>
 84	86	more
-85	0	<epsilon>	-0.693147182
+85	0	<eps>	-0.693147182
 85	87	a
 85	104	respectable
-86	85	<epsilon>
+86	85	<eps>
 86	87	a
-87	83	<epsilon>
+87	83	<eps>
 87	89	amiable
-88	0	<epsilon>	-0.693147182
+88	0	<eps>	-0.693147182
 88	91	woman
 88	113	himself
-89	88	<epsilon>
+89	88	<eps>
 89	91	woman
-90	0	<epsilon>
+90	0	<eps>
 90	92	he
-91	90	<epsilon>
+91	90	<eps>
 91	92	he
-92	45	<epsilon>
+92	45	<eps>
 92	93	might
-93	26	<epsilon>	-0.693147182
+93	26	<eps>	-0.693147182
 93	95	have
 93	109	even
-94	0	<epsilon>	-0.693147182
+94	0	<eps>	-0.693147182
 94	97	been	-0.693147182
-95	94	<epsilon>
+95	94	<eps>
 95	97	been
-96	0	<epsilon>	-0.693147182
+96	0	<eps>	-0.693147182
 96	99	made	-0.693147182
-97	96	<epsilon>	-0.693147182
+97	96	<eps>	-0.693147182
 97	99	made	-0.693147182
-98	0	<epsilon>	-0.693147182
+98	0	<eps>	-0.693147182
 98	111	amiable
 98	101	still
-99	98	<epsilon>	-0.693147182
+99	98	<eps>	-0.693147182
 99	111	amiable
 99	101	still
-100	0	<epsilon>
+100	0	<eps>
 100	102	more
-101	100	<epsilon>
+101	100	<eps>
 101	102	more
-102	85	<epsilon>
+102	85	<eps>
 102	104	respectable
-103	0	<epsilon>
+103	0	<eps>
 103	106	than
-104	103	<epsilon>
+104	103	<eps>
 104	106	than
-105	0	<epsilon>
+105	0	<eps>
 105	107	he
-106	105	<epsilon>
+106	105	<eps>
 106	107	he
-107	45	<epsilon>
+107	45	<eps>
 107	48	was
-108	0	<epsilon>
+108	0	<eps>
 108	110	have
-109	108	<epsilon>
+109	108	<eps>
 109	110	have
-110	94	<epsilon>
+110	94	<eps>
 110	97	been
-111	88	<epsilon>
+111	88	<eps>
 111	113	himself
-112	0	<epsilon>
+112	0	<eps>
 112
-113	112	<epsilon>
+113	112	<eps>
 113
