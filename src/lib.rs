@@ -135,16 +135,14 @@ impl<W: Semiring> NGramCounter<W> {
                 for idx in 0..trs.len() {
                     if trs[idx].ilabel != EPS_LABEL {
                         state_count.plus_assign(&trs[idx].weight)?;
-                    }
-                    else {
+                    } else {
                         bo_pos = Some(idx);
                     }
                 }
                 match bo_pos {
                     None => return Err(anyhow!("backoff arc not found")),
-                    Some(idx) => trs.set_weight(idx, state_count)?
+                    Some(idx) => trs.set_weight(idx, state_count)?,
                 }
-                
             }
         }
         Ok(())
@@ -179,7 +177,6 @@ impl<W: Semiring> NGramCounter<W> {
             return tr_id;
         }
         // Compute the backoff arc
-        let backoff_state = self.states[state_id as usize].backoff_state;
         let backoff_tr = if backoff_state == NO_STATE_ID {
             NO_STATE_ID
         } else {
