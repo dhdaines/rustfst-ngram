@@ -13,9 +13,9 @@ use std::path::PathBuf;
 /// rustfst does not define this but we will
 type StdVectorFst = VectorFst<TropicalWeight>;
 
+mod coc;
 mod count;
 mod model;
-mod coc;
 
 /// N-Gram counter
 pub use count::NGramCounter;

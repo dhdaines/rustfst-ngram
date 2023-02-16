@@ -1,12 +1,12 @@
 use anyhow::{anyhow, Result};
+use ordered_float::OrderedFloat;
 use rustfst::fst_impls::VectorFst;
 use rustfst::prelude::*;
 use rustfst::semirings::{ReverseBack, Semiring, SemiringProperties};
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::hash::{Hash, Hasher};
 use std::borrow::Borrow;
-use ordered_float::OrderedFloat;
+use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
+use std::sync::Arc;
 
 use crate::StdVectorFst;
 
@@ -28,14 +28,20 @@ impl Semiring for Count {
     type ReverseWeight = Count;
 
     fn zero() -> Self {
-        Self { value: OrderedFloat(0.0) }
+        Self {
+            value: OrderedFloat(0.0),
+        }
     }
 
     fn one() -> Self {
-        Self { value: OrderedFloat(1.0) }
+        Self {
+            value: OrderedFloat(1.0),
+        }
     }
     fn new(value: <Self as Semiring>::Type) -> Self {
-        Self { value: OrderedFloat(value) }
+        Self {
+            value: OrderedFloat(value),
+        }
     }
     fn plus_assign<P: Borrow<Self>>(&mut self, rhs: P) -> Result<()> {
         self.value.0 += rhs.borrow().value.0;
@@ -316,7 +322,10 @@ impl NGramCounter {
             fst.add_state();
             // rustfst and openfst handle final states differently
             if state.final_count != Count::zero() {
-                fst.set_final(s, TropicalWeight::from(-state.final_count.take_ln32_value()))?;
+                fst.set_final(
+                    s,
+                    TropicalWeight::from(-state.final_count.take_ln32_value()),
+                )?;
             }
             if state.backoff_state != NO_STATE_ID {
                 fst.add_tr(
@@ -333,7 +342,12 @@ impl NGramCounter {
         for tr in self.trs.iter() {
             fst.add_tr(
                 tr.origin,
-                Tr::new(tr.label, tr.label, -tr.count.take_ln32_value(), tr.destination),
+                Tr::new(
+                    tr.label,
+                    tr.label,
+                    -tr.count.take_ln32_value(),
+                    tr.destination,
+                ),
             )?;
         }
         fst.set_start(self.initial)?;

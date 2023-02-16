@@ -1,5 +1,5 @@
-use rustfst::prelude::*;
 use crate::StdVectorFst;
+use rustfst::prelude::*;
 
 // Default normalization constant (e.g., for checks)
 const KNORMEPS: f64 = 0.001;
