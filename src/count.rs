@@ -12,7 +12,7 @@ use crate::StdVectorFst;
 
 /// ID for an arc being counted
 type TrId = StateId;
-/// There is no arc here (FIXME: Option would be safer...)
+/// There is no arc here
 pub static NO_TR_ID: TrId = NO_STATE_ID;
 /// Keep track of transitions out of a given state
 type PairTrMap = HashMap<(Label, StateId), TrId>;

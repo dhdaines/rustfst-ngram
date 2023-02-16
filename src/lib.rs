@@ -14,10 +14,14 @@ use std::path::PathBuf;
 type StdVectorFst = VectorFst<TropicalWeight>;
 
 mod count;
+mod model;
 mod coc;
 
 /// N-Gram counter
 pub use count::NGramCounter;
+
+/// N-Gram model
+pub use model::NGramModel;
 
 /// Count-of-Counts for Kneser-Ney
 pub use coc::NGramCountOfCounts;
