@@ -13,11 +13,14 @@ use std::path::PathBuf;
 /// rustfst does not define this but we will
 type StdVectorFst = VectorFst<TropicalWeight>;
 
-/// Functions for counting N-Grams from text
-pub mod count;
+mod count;
+mod coc;
 
 /// N-Gram counter
 pub use count::NGramCounter;
+
+/// Count-of-Counts for Kneser-Ney
+pub use coc::NGramCountOfCounts;
 
 /// Read input sequences as whitespace-separated lines
 pub fn read_sequences(input: &PathBuf) -> Result<(Vec<StdVectorFst>, SymbolTable)> {
