@@ -7,4 +7,5 @@ license = "BSD-2-Clause"
 
 [dependencies]
 anyhow = "1.0.68"
+ordered-float = "3.4.0"
 rustfst = "0.13.1"

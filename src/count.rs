@@ -1,20 +1,116 @@
 use anyhow::{anyhow, Result};
 use rustfst::fst_impls::VectorFst;
 use rustfst::prelude::*;
-use rustfst::semirings::Semiring;
+use rustfst::semirings::{ReverseBack, Semiring, SemiringProperties};
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::hash::{Hash, Hasher};
+use std::borrow::Borrow;
+use ordered_float::OrderedFloat;
 
 use crate::StdVectorFst;
 
-/// Type for counts
-type Count = LogWeight;
 /// ID for an arc being counted
 type TrId = StateId;
 /// There is no arc here (FIXME: Option would be safer...)
 pub static NO_TR_ID: TrId = NO_STATE_ID;
 /// Keep track of transitions out of a given state
 type PairTrMap = HashMap<(Label, StateId), TrId>;
+
+/// Type for counts (basically Float64Weight)
+#[derive(Clone, Debug, PartialOrd, Default, Copy, Eq)]
+struct Count {
+    value: OrderedFloat<f64>,
+}
+
+impl Semiring for Count {
+    type Type = f64;
+    type ReverseWeight = Count;
+
+    fn zero() -> Self {
+        Self { value: OrderedFloat(0.0) }
+    }
+
+    fn one() -> Self {
+        Self { value: OrderedFloat(1.0) }
+    }
+    fn new(value: <Self as Semiring>::Type) -> Self {
+        Self { value: OrderedFloat(value) }
+    }
+    fn plus_assign<P: Borrow<Self>>(&mut self, rhs: P) -> Result<()> {
+        self.value.0 += rhs.borrow().value.0;
+        Ok(())
+    }
+    fn times_assign<P: Borrow<Self>>(&mut self, rhs: P) -> Result<()> {
+        self.value.0 *= rhs.borrow().value.0;
+        Ok(())
+    }
+    fn approx_equal<P: Borrow<Self>>(&self, rhs: P, delta: f32) -> bool {
+        (self.value.0 - rhs.borrow().value.0).abs() <= delta as Self::Type
+    }
+
+    fn value(&self) -> &Self::Type {
+        self.value.as_ref()
+    }
+
+    fn take_value(self) -> Self::Type {
+        self.value.into_inner()
+    }
+
+    fn set_value(&mut self, value: <Self as Semiring>::Type) {
+        self.value.0 = value
+    }
+
+    fn reverse(&self) -> Result<Self::ReverseWeight> {
+        Ok(*self)
+    }
+
+    fn properties() -> SemiringProperties {
+        SemiringProperties::LEFT_SEMIRING
+            | SemiringProperties::RIGHT_SEMIRING
+            | SemiringProperties::COMMUTATIVE
+    }
+}
+
+impl ReverseBack<Count> for Count {
+    fn reverse_back(&self) -> Result<Self> {
+        Ok(*self)
+    }
+}
+
+impl AsRef<Count> for Count {
+    fn as_ref(&self) -> &Self {
+        self
+    }
+}
+
+impl From<f32> for Count {
+    fn from(i: f32) -> Self {
+        Self::new(i as f64)
+    }
+}
+
+impl Count {
+    fn take_ln32_value(self) -> f32 {
+        self.value.ln() as f32
+    }
+}
+
+const KDDELTA: f64 = KDELTA as f64;
+impl PartialEq for Count {
+    fn eq(&self, other: &Self) -> bool {
+        // self.value() == other.value()
+        let w1 = *self.value();
+        let w2 = *other.value();
+        w1 <= (w2 + KDDELTA) && w2 <= (w1 + KDDELTA)
+    }
+}
+
+impl Hash for Count {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.value.hash(state)
+    }
+}
 
 /// Metadata for states
 #[derive(Debug)]
@@ -106,14 +202,16 @@ impl NGramCounter {
                 let mut trs = fst.tr_iter_mut(s)?;
                 for idx in 0..trs.len() {
                     if trs[idx].ilabel != EPS_LABEL {
-                        state_count.plus_assign(Count::from(*trs[idx].weight.value()))?;
+                        state_count.plus_assign(Count::from((-trs[idx].weight.value()).exp()))?;
                     } else {
                         bo_pos = Some(idx);
                     }
                 }
                 match bo_pos {
                     None => return Err(anyhow!("backoff arc not found")),
-                    Some(idx) => trs.set_weight(idx, TropicalWeight::from(*state_count.value()))?,
+                    Some(idx) => {
+                        trs.set_weight(idx, TropicalWeight::from(-state_count.take_ln32_value()))?
+                    }
                 }
             }
         }
@@ -218,7 +316,7 @@ impl NGramCounter {
             fst.add_state();
             // rustfst and openfst handle final states differently
             if state.final_count != Count::zero() {
-                fst.set_final(s, *state.final_count.value())?;
+                fst.set_final(s, TropicalWeight::from(-state.final_count.take_ln32_value()))?;
             }
             if state.backoff_state != NO_STATE_ID {
                 fst.add_tr(
@@ -235,7 +333,7 @@ impl NGramCounter {
         for tr in self.trs.iter() {
             fst.add_tr(
                 tr.origin,
-                Tr::new(tr.label, tr.label, *tr.count.value(), tr.destination),
+                Tr::new(tr.label, tr.label, -tr.count.take_ln32_value(), tr.destination),
             )?;
         }
         fst.set_start(self.initial)?;
